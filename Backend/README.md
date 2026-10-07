@@ -39,6 +39,7 @@ the database. Notification routes create their tables on first use.
 After deployment, verify the hosted endpoints:
 
 ```powershell
+npm run verify-api
 Invoke-RestMethod 'https://abc-self-psi.vercel.app/api/health'
 Invoke-RestMethod 'https://abc-self-psi.vercel.app/api/notifications'
 Invoke-RestMethod 'https://abc-self-psi.vercel.app/api/notifications/unread-count'
@@ -48,3 +49,17 @@ The notifications list should return `success: true` and a `data` array. Then
 post an announcement from the admin screen and check the student announcements
 tab. The APK already uses the correct URL, so this backend deployment does not
 require an APK rebuild.
+
+`npm run verify-api` checks the health, announcement list/count, personal inbox
+count, and announcement POST validation without publishing an announcement. It
+exits with a failure if any required route is missing.
+
+For local development, set `EXPO_PUBLIC_API_URL=http://localhost:5000/api` in
+`Frontend/.env.local` and reload the app. A physical phone needs your computer's
+LAN address instead of `localhost`. Leave this variable unset to use the hosted
+HTTPS backend in web and APK builds. Expo embeds this value when bundling.
+
+After changing the frontend, create a new installable Android APK with
+`npx eas-cli@latest build --platform android --profile preview` from `Frontend`.
+The installed APK needs a rebuild to include frontend layout changes; deploying
+missing backend routes fixes the existing APK's API error.

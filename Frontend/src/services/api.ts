@@ -1,6 +1,6 @@
 // Hosted backend URL for Vercel deployment.
-export const API_BASE_URL = "https://abc-self-psi.vercel.app/api";
-export const DEPLOYED_API_URL = API_BASE_URL;
+export const DEPLOYED_API_URL = "https://abc-self-psi.vercel.app/api";
+export const API_BASE_URL = (process.env.EXPO_PUBLIC_API_URL || DEPLOYED_API_URL).replace(/\/+$/, "");
 
 export const LAN_API_URL = API_BASE_URL;
 
@@ -660,7 +660,7 @@ export const api = {
       const res = await fetch(`${getApiUrl()}/notifications${query}`, { cache: "no-store" });
       return await res.json();
     } catch (e: any) {
-      return { success: false, data: [] };
+      return { success: false, data: [], message: "Unable to load announcements. Please check your connection." };
     }
   },
 
@@ -677,7 +677,7 @@ export const api = {
     title: string;
     message: string;
     type?: string;
-    targetStream?: string;
+    targetStream?: string | null;
     isPinned?: boolean;
   }) => {
     try {
@@ -694,7 +694,7 @@ export const api = {
 
   updateNotification: async (
     id: number,
-    data: { title?: string; message?: string; type?: string; targetStream?: string; isPinned?: boolean }
+    data: { title?: string; message?: string; type?: string; targetStream?: string | null; isPinned?: boolean }
   ) => {
     try {
       const res = await fetch(`${getApiUrl()}/notifications/${id}`, {

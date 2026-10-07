@@ -10,8 +10,10 @@ import {
   RefreshControl,
   Alert,
   Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Brand } from "../constants/theme";
 import { useApp } from "../context/AppContext";
@@ -56,6 +58,7 @@ const scholarshipCategoriesList = [
 
 export const AdminDashboardScreen: React.FC = () => {
   const { adminData, adminToken, adminLogout } = useApp();
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<AdminTab>("universities");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -153,6 +156,10 @@ export const AdminDashboardScreen: React.FC = () => {
   const [annTargetStream, setAnnTargetStream] = useState("");
   const [annIsPinned, setAnnIsPinned] = useState(false);
   const [savingAnnouncement, setSavingAnnouncement] = useState(false);
+  const [announcementError, setAnnouncementError] = useState("");
+  const [announcementListError, setAnnouncementListError] = useState("");
+  const [announcementNotice, setAnnouncementNotice] = useState("");
+  const [announcementToDelete, setAnnouncementToDelete] = useState<any | null>(null);
 
   const categories = ["Technology", "Business", "Creative", "Social"];
   const studentStreamFilters = ["", "Physical Science", "Biological Science", "Commerce", "Arts", "Technology"];
@@ -259,10 +266,13 @@ export const AdminDashboardScreen: React.FC = () => {
 
   const loadAnnouncements = useCallback(async () => {
     setAnnouncementsLoading(true);
+    setAnnouncementListError("");
     try {
       const res = await api.getNotifications();
       if (res?.success) setAnnouncements(res.data || []);
+      else setAnnouncementListError(res?.message || "Unable to load announcements. Please try again.");
     } catch (e) {
+      setAnnouncementListError("Unable to load announcements. Please check your connection.");
       console.log("Error loading announcements:", e);
     } finally {
       setAnnouncementsLoading(false);
@@ -859,6 +869,8 @@ export const AdminDashboardScreen: React.FC = () => {
 
   // --- Announcements (Notifications) CRUD Handlers ---
   const openCreateAnnouncementModal = () => {
+    setAnnouncementError("");
+    setAnnouncementNotice("");
     setEditingAnnouncement(null);
     setAnnTitle("");
     setAnnMessage("");
@@ -869,6 +881,8 @@ export const AdminDashboardScreen: React.FC = () => {
   };
 
   const openEditAnnouncementModal = (ann: any) => {
+    setAnnouncementError("");
+    setAnnouncementNotice("");
     setEditingAnnouncement(ann);
     setAnnTitle(ann.title || "");
     setAnnMessage(ann.message || "");
@@ -879,8 +893,10 @@ export const AdminDashboardScreen: React.FC = () => {
   };
 
   const handleSaveAnnouncement = async () => {
+    if (savingAnnouncement) return;
+    setAnnouncementError("");
     if (!annTitle.trim() || !annMessage.trim()) {
-      Alert.alert("Missing Fields", "Title and Message are required.");
+      setAnnouncementError("Title and Message are required.");
       return;
     }
     setSavingAnnouncement(true);
@@ -889,7 +905,7 @@ export const AdminDashboardScreen: React.FC = () => {
         title: annTitle.trim(),
         message: annMessage.trim(),
         type: annType,
-        targetStream: annTargetStream || undefined,
+        targetStream: annTargetStream || null,
         isPinned: annIsPinned,
       };
       let res;
@@ -900,42 +916,42 @@ export const AdminDashboardScreen: React.FC = () => {
       }
       if (res?.success) {
         setAnnouncementModalVisible(false);
-        loadAnnouncements();
-        Alert.alert("Success", editingAnnouncement ? "Announcement updated!" : "Announcement posted!");
+        setAnnouncementNotice(editingAnnouncement ? "Announcement updated!" : "Announcement posted!");
+        await loadAnnouncements();
       } else {
-        Alert.alert("Error", res?.message || "Failed to save announcement.");
+        setAnnouncementError(res?.message || "Failed to save announcement.");
       }
-    } catch (e: any) {
-      Alert.alert("Error", "Something went wrong.");
+    } catch {
+      setAnnouncementError("Unable to save announcement. Please check your connection and try again.");
     } finally {
       setSavingAnnouncement(false);
     }
   };
 
   const handleDeleteAnnouncement = (ann: any) => {
-    Alert.alert(
-      "Delete Announcement",
-      `Delete "${ann.title}"? Students will no longer see this.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const res = await api.deleteNotification(ann.id);
-              if (res?.success) {
-                loadAnnouncements();
-              } else {
-                Alert.alert("Error", res?.message || "Failed to delete.");
-              }
-            } catch (e) {
-              Alert.alert("Error", "Something went wrong.");
-            }
-          },
-        },
-      ]
-    );
+    setAnnouncementError("");
+    setAnnouncementNotice("");
+    setAnnouncementToDelete(ann);
+  };
+
+  const confirmDeleteAnnouncement = async () => {
+    if (!announcementToDelete || savingAnnouncement) return;
+    setSavingAnnouncement(true);
+    setAnnouncementError("");
+    try {
+      const res = await api.deleteNotification(announcementToDelete.id);
+      if (res?.success) {
+        setAnnouncementToDelete(null);
+        setAnnouncementNotice("Announcement deleted.");
+        await loadAnnouncements();
+      } else {
+        setAnnouncementError(res?.message || "Failed to delete announcement.");
+      }
+    } catch {
+      setAnnouncementError("Unable to delete announcement. Please try again.");
+    } finally {
+      setSavingAnnouncement(false);
+    }
   };
 
   const pendingInquiriesCount = inquiries.filter((i) => i.status === "Pending").length;
@@ -1759,8 +1775,18 @@ export const AdminDashboardScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
 
+            {!!announcementNotice && (
+              <Text accessibilityLiveRegion="polite" style={styles.announcementNotice}>{announcementNotice}</Text>
+            )}
             {announcementsLoading ? (
               <ActivityIndicator color={Brand.primary} style={{ marginTop: 40 }} />
+            ) : announcementListError ? (
+              <View style={styles.emptyCard}>
+                <Text accessibilityRole="alert" style={styles.announcementError}>{announcementListError}</Text>
+                <TouchableOpacity style={styles.addBtn} onPress={loadAnnouncements}>
+                  <Text style={styles.addBtnText}>Retry</Text>
+                </TouchableOpacity>
+              </View>
             ) : announcements.length === 0 ? (
               <View style={{ alignItems: "center", marginTop: 60 }}>
                 <Ionicons name="notifications-off-outline" size={48} color={Brand.textMuted} />
@@ -1806,10 +1832,10 @@ export const AdminDashboardScreen: React.FC = () => {
                         ) : null}
                       </View>
                       <View style={{ flexDirection: "row", gap: 8 }}>
-                        <TouchableOpacity style={[styles.iconActionBtn, { backgroundColor: '#EFF6FF' }]} onPress={() => openEditAnnouncementModal(ann)}>
+                        <TouchableOpacity accessibilityLabel="Edit announcement" style={[styles.iconActionBtn, { backgroundColor: '#EFF6FF' }]} onPress={() => openEditAnnouncementModal(ann)}>
                           <Ionicons name="pencil" size={14} color={Brand.primary} />
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.iconActionBtn, styles.deleteBtn]} onPress={() => handleDeleteAnnouncement(ann)}>
+                        <TouchableOpacity accessibilityLabel="Delete announcement" style={[styles.iconActionBtn, styles.deleteBtn]} onPress={() => handleDeleteAnnouncement(ann)}>
                           <Ionicons name="trash" size={14} color="#EF4444" />
                         </TouchableOpacity>
                       </View>
@@ -1832,10 +1858,14 @@ export const AdminDashboardScreen: React.FC = () => {
         visible={announcementModalVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setAnnouncementModalVisible(false)}
+        onRequestClose={() => { if (!savingAnnouncement) setAnnouncementModalVisible(false); }}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { maxHeight: "85%" }]}>
+        <KeyboardAvoidingView
+          style={[styles.modalOverlay, styles.announcementOverlay]}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          enabled={Platform.OS !== "web"}
+        >
+          <View style={[styles.modalContent, styles.announcementContent, { paddingBottom: Math.max(insets.bottom, 16) }]}>
             <View style={styles.modalHeader}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.modalCategoryText}>Announcements</Text>
@@ -1843,12 +1873,15 @@ export const AdminDashboardScreen: React.FC = () => {
                   {editingAnnouncement ? "Edit Announcement" : "Post Announcement"}
                 </Text>
               </View>
-              <TouchableOpacity onPress={() => setAnnouncementModalVisible(false)}>
+              <TouchableOpacity accessibilityLabel="Close announcement" disabled={savingAnnouncement} onPress={() => setAnnouncementModalVisible(false)}>
                 <Ionicons name="close" size={24} color={Brand.text} />
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            {!!announcementError && (
+              <Text accessibilityRole="alert" style={styles.announcementError}>{announcementError}</Text>
+            )}
+            <ScrollView style={styles.announcementForm} keyboardShouldPersistTaps="handled">
               <Text style={styles.modalLabel}>Title *</Text>
               <TextInput
                 style={styles.modalInput}
@@ -1929,28 +1962,47 @@ export const AdminDashboardScreen: React.FC = () => {
                 </Text>
               </TouchableOpacity>
 
-              <View style={styles.modalBtnRow}>
-                <TouchableOpacity
-                  style={styles.modalCancelBtn}
-                  onPress={() => setAnnouncementModalVisible(false)}
-                >
-                  <Text style={styles.modalCancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.modalSaveBtn, savingAnnouncement && { opacity: 0.6 }]}
-                  onPress={handleSaveAnnouncement}
-                  disabled={savingAnnouncement}
-                >
-                  {savingAnnouncement ? (
-                    <ActivityIndicator color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.modalSaveText}>
-                      {editingAnnouncement ? "Update" : "Post Announcement"}
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
             </ScrollView>
+            <View style={[styles.modalBtnRow, styles.announcementActions]}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setAnnouncementModalVisible(false)}
+                disabled={savingAnnouncement}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalSaveBtn, savingAnnouncement && { opacity: 0.6 }]}
+                onPress={handleSaveAnnouncement}
+                disabled={savingAnnouncement}
+              >
+                {savingAnnouncement ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.modalSaveText}>
+                    {editingAnnouncement ? "Update" : "Post Announcement"}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal visible={!!announcementToDelete} transparent animationType="fade" onRequestClose={() => { if (!savingAnnouncement) setAnnouncementToDelete(null); }}>
+        <View style={[styles.modalOverlay, styles.announcementOverlay]}>
+          <View style={[styles.modalContent, styles.announcementDeleteContent]}>
+            <Text style={styles.modalTitle}>Delete Announcement</Text>
+            <Text style={styles.modalLabel}>{`Delete "${announcementToDelete?.title}"? Students will no longer see this.`}</Text>
+            {!!announcementError && <Text accessibilityRole="alert" style={styles.announcementError}>{announcementError}</Text>}
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity style={styles.modalCancelBtn} disabled={savingAnnouncement} onPress={() => setAnnouncementToDelete(null)}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalSaveBtn, { backgroundColor: "#DC2626" }]} disabled={savingAnnouncement} onPress={confirmDeleteAnnouncement}>
+                {savingAnnouncement ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.modalSaveText}>Delete</Text>}
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -2969,6 +3021,22 @@ const styles = StyleSheet.create({
 
   // Modals
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
+  announcementOverlay: {
+    alignItems: "center",
+    ...(Platform.OS === "web" ? { justifyContent: "center", padding: 16 } : {}),
+  },
+  announcementContent: {
+    width: "100%",
+    maxWidth: 680,
+    height: "85%",
+    maxHeight: "85%",
+    ...(Platform.OS === "web" ? { borderRadius: 24 } : {}),
+  },
+  announcementForm: { flex: 1, minHeight: 0 },
+  announcementActions: { marginTop: 16, marginBottom: 0, flexShrink: 0 },
+  announcementDeleteContent: { width: "100%", maxWidth: 480, borderRadius: 24 },
+  announcementError: { color: "#B91C1C", backgroundColor: "#FEF2F2", padding: 12, borderRadius: 8, marginBottom: 12 },
+  announcementNotice: { color: "#166534", backgroundColor: "#F0FDF4", padding: 12, borderRadius: 8, marginBottom: 12 },
   modalContent: {
     backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 24,

@@ -136,6 +136,9 @@ export const AdminDashboardScreen: React.FC = () => {
   const [selectedInquiry, setSelectedInquiry] = useState<any | null>(null);
   const [replyText, setReplyText] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
+  const [inquiryToDelete, setInquiryToDelete] = useState<any | null>(null);
+  const [deletingInquiry, setDeletingInquiry] = useState(false);
+  const [inquiryDeleteError, setInquiryDeleteError] = useState("");
 
   // --- Students state ---
   const [students, setStudents] = useState<any[]>([]);
@@ -757,6 +760,34 @@ export const AdminDashboardScreen: React.FC = () => {
   };
 
   // --- Inquiries Handlers ---
+  const handleDeleteInquiry = (inq: any) => {
+    setInquiryDeleteError("");
+    setInquiryToDelete(inq);
+  };
+
+  const confirmDeleteInquiry = async () => {
+    if (!inquiryToDelete || deletingInquiry) return;
+    setDeletingInquiry(true);
+    setInquiryDeleteError("");
+    try {
+      const res = await api.deleteInquiry(inquiryToDelete.id);
+      if (res?.success) {
+        setInquiries((current) => current.filter((inq) => inq.id !== inquiryToDelete.id));
+        if (selectedInquiry?.id === inquiryToDelete.id) {
+          setSelectedInquiry(null);
+          setReplyModalVisible(false);
+        }
+        setInquiryToDelete(null);
+      } else {
+        setInquiryDeleteError(res?.message || "Failed to delete inquiry. Please try again.");
+      }
+    } catch {
+      setInquiryDeleteError("Unable to delete inquiry. Please check your connection and try again.");
+    } finally {
+      setDeletingInquiry(false);
+    }
+  };
+
   const openReplyModal = (inq: any) => {
     setSelectedInquiry(inq);
     setReplyText(inq.admin_reply || "");
@@ -1620,20 +1651,31 @@ export const AdminDashboardScreen: React.FC = () => {
                         <Text style={styles.inquiryDate}>
                           {inq.created_at ? new Date(inq.created_at).toLocaleDateString() : ""}
                         </Text>
-                        <TouchableOpacity
-                          style={styles.replyActionBtn}
-                          onPress={() => openReplyModal(inq)}
-                        >
-                          <Ionicons
-                            name={inq.admin_reply ? "pencil-outline" : "paper-plane-outline"}
-                            size={14}
-                            color="#FFFFFF"
-                            style={{ marginRight: 6 }}
-                          />
-                          <Text style={styles.replyActionBtnText}>
-                            {inq.admin_reply ? "Edit Reply" : "Reply to Student"}
-                          </Text>
-                        </TouchableOpacity>
+                        <View style={styles.inquiryActionButtons}>
+                          <TouchableOpacity
+                            accessibilityRole="button"
+                            accessibilityLabel={`Delete inquiry: ${inq.subject}`}
+                            style={[styles.replyActionBtn, styles.deleteBtn]}
+                            onPress={() => handleDeleteInquiry(inq)}
+                          >
+                            <Ionicons name="trash-outline" size={14} color="#DC2626" style={{ marginRight: 6 }} />
+                            <Text style={styles.inquiryDeleteBtnText}>Delete</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.replyActionBtn}
+                            onPress={() => openReplyModal(inq)}
+                          >
+                            <Ionicons
+                              name={inq.admin_reply ? "pencil-outline" : "paper-plane-outline"}
+                              size={14}
+                              color="#FFFFFF"
+                              style={{ marginRight: 6 }}
+                            />
+                            <Text style={styles.replyActionBtnText}>
+                              {inq.admin_reply ? "Edit Reply" : "Reply to Student"}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
                       </View>
                     </View>
                   );
@@ -2004,6 +2046,44 @@ export const AdminDashboardScreen: React.FC = () => {
             </View>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={!!inquiryToDelete}
+        transparent
+        animationType="fade"
+        onRequestClose={() => { if (!deletingInquiry) setInquiryToDelete(null); }}
+      >
+        <View style={[styles.modalOverlay, styles.announcementOverlay]}>
+          <View style={[styles.modalContent, styles.announcementDeleteContent, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+            <Text style={styles.modalTitle}>Delete Inquiry</Text>
+            <Text style={styles.modalLabel}>
+              {`Delete "${inquiryToDelete?.subject}" from ${inquiryToDelete?.student_name || "this student"}? The inquiry and its reply will be permanently removed.`}
+            </Text>
+            {!!inquiryDeleteError && (
+              <Text accessibilityRole="alert" style={styles.announcementError}>{inquiryDeleteError}</Text>
+            )}
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                style={styles.modalCancelBtn}
+                disabled={deletingInquiry}
+                onPress={() => setInquiryToDelete(null)}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Confirm delete inquiry"
+                style={[styles.modalSaveBtn, { backgroundColor: "#DC2626" }, deletingInquiry && { opacity: 0.6 }]}
+                disabled={deletingInquiry}
+                onPress={confirmDeleteInquiry}
+              >
+                {deletingInquiry ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.modalSaveText}>Delete</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
 
       <Modal visible={!!announcementToDelete} transparent animationType="fade" onRequestClose={() => { if (!savingAnnouncement) setAnnouncementToDelete(null); }}>
@@ -2844,19 +2924,21 @@ const styles = StyleSheet.create({
   streamBadgeText: { fontSize: 11, fontWeight: "700" },
   courseName: { fontSize: 15, fontWeight: "700", color: Brand.text, marginBottom: 4 },
   courseUniName: { fontSize: 12, fontWeight: "600", color: Brand.primary, marginBottom: 8 },
-  courseDetailsRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 },
+  courseDetailsRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 8 },
   minZBadge: {
     flexDirection: "row",
     alignItems: "center",
+    maxWidth: "100%",
     backgroundColor: "#ECFDF5",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
-  minZText: { fontSize: 11, fontWeight: "700", color: "#059669", marginLeft: 4 },
+  minZText: { fontSize: 11, fontWeight: "700", color: "#059669", marginLeft: 4, flexShrink: 1 },
   durationBadge: {
     flexDirection: "row",
     alignItems: "center",
+    maxWidth: "100%",
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
     borderColor: "#E2E8F0",
@@ -2864,8 +2946,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
   },
-  durationText: { fontSize: 11, fontWeight: "600", color: "#64748B", marginLeft: 4 },
+  durationText: { fontSize: 11, fontWeight: "600", color: "#64748B", marginLeft: 4, flexShrink: 1 },
   degreeBadge: {
+    maxWidth: "100%",
     backgroundColor: "#EFF6FF",
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -2942,6 +3025,8 @@ const styles = StyleSheet.create({
   adminReplyText: { flex: 1, fontSize: 12, color: "#065F46", marginLeft: 6, lineHeight: 16 },
   inquiryActionRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
     alignItems: "center",
     justifyContent: "space-between",
     paddingTop: 10,
@@ -2949,6 +3034,8 @@ const styles = StyleSheet.create({
     borderTopColor: "#F1F5F9",
   },
   inquiryDate: { fontSize: 12, color: Brand.textMuted },
+  inquiryActionButtons: { flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-end", gap: 8, marginLeft: "auto" },
+  inquiryDeleteBtnText: { color: "#DC2626", fontSize: 12, fontWeight: "700" },
   replyActionBtn: {
     flexDirection: "row",
     alignItems: "center",

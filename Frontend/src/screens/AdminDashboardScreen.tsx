@@ -148,6 +148,7 @@ export const AdminDashboardScreen: React.FC = () => {
   // --- Announcements (Notifications) state ---
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [announcementsLoading, setAnnouncementsLoading] = useState(false);
+  const [announcementSearch, setAnnouncementSearch] = useState("");
   const [announcementModalVisible, setAnnouncementModalVisible] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<any | null>(null);
   const [annTitle, setAnnTitle] = useState("");
@@ -967,6 +968,13 @@ export const AdminDashboardScreen: React.FC = () => {
     );
   });
 
+  const filteredAnnouncements = announcements.filter((announcement) => {
+    const query = announcementSearch.trim().toLowerCase();
+    if (!query) return true;
+    return [announcement.title, announcement.message, announcement.type, announcement.target_stream]
+      .some((value) => value?.toLowerCase().includes(query));
+  });
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       {/* Top App Header */}
@@ -1116,6 +1124,7 @@ export const AdminDashboardScreen: React.FC = () => {
         </View>
       ) : (
         <ScrollView
+          key={activeTab}
           style={styles.content}
           contentContainerStyle={{ paddingBottom: 40 }}
           refreshControl={
@@ -1752,104 +1761,112 @@ export const AdminDashboardScreen: React.FC = () => {
               </View>
             </View>
           )}
-        </ScrollView>
-      )}
 
-      {/* ═══════════ TAB 8: ANNOUNCEMENTS / NOTIFICATIONS ═══════════ */}
-      {activeTab === "announcements" && !loading && (
-        <ScrollView
-          style={styles.content}
-          contentContainerStyle={{ paddingBottom: 40 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Brand.primary} />}
-        >
-          <View style={styles.tabContent}>
-            {/* Action Banner */}
-            <View style={styles.actionBanner}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.bannerHeading}>Announcements</Text>
-                <Text style={styles.bannerSub}>Post notifications visible to all students.</Text>
-              </View>
-              <TouchableOpacity style={styles.addBtn} onPress={openCreateAnnouncementModal}>
-                <Ionicons name="add" size={18} color="#FFFFFF" />
-                <Text style={styles.addBtnText}>Post</Text>
-              </TouchableOpacity>
-            </View>
-
-            {!!announcementNotice && (
-              <Text accessibilityLiveRegion="polite" style={styles.announcementNotice}>{announcementNotice}</Text>
-            )}
-            {announcementsLoading ? (
-              <ActivityIndicator color={Brand.primary} style={{ marginTop: 40 }} />
-            ) : announcementListError ? (
-              <View style={styles.emptyCard}>
-                <Text accessibilityRole="alert" style={styles.announcementError}>{announcementListError}</Text>
-                <TouchableOpacity style={styles.addBtn} onPress={loadAnnouncements}>
-                  <Text style={styles.addBtnText}>Retry</Text>
+          {/* ═══════════ TAB 8: ANNOUNCEMENTS / NOTIFICATIONS ═══════════ */}
+          {activeTab === "announcements" && (
+            <View style={styles.tabContent}>
+              {/* Action Banner */}
+              <View style={styles.actionBanner}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.bannerHeading}>Notifications Management</Text>
+                  <Text style={styles.bannerSub}>Post notifications visible to all students.</Text>
+                </View>
+                <TouchableOpacity style={styles.addBtn} onPress={openCreateAnnouncementModal}>
+                  <Ionicons name="add-circle" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+                  <Text style={styles.addBtnText}>Post Notification</Text>
                 </TouchableOpacity>
               </View>
-            ) : announcements.length === 0 ? (
-              <View style={{ alignItems: "center", marginTop: 60 }}>
-                <Ionicons name="notifications-off-outline" size={48} color={Brand.textMuted} />
-                <Text style={{ color: Brand.textMuted, marginTop: 12, fontSize: 14 }}>
-                  No announcements yet. Post one!
-                </Text>
+
+              <View style={styles.searchBox}>
+                <Ionicons name="search" size={18} color={Brand.textMuted} />
+                <TextInput
+                  accessibilityLabel="Search notifications"
+                  style={styles.searchInput}
+                  placeholder="Search notifications by title, message, or stream..."
+                  placeholderTextColor={Brand.textMuted}
+                  value={announcementSearch}
+                  onChangeText={setAnnouncementSearch}
+                />
+                {announcementSearch ? (
+                  <TouchableOpacity accessibilityLabel="Clear notification search" onPress={() => setAnnouncementSearch("")}>
+                    <Ionicons name="close-circle" size={18} color={Brand.textMuted} />
+                  </TouchableOpacity>
+                ) : null}
               </View>
-            ) : (
-              announcements.map((ann: any) => {
-                const typeColors: Record<string, { bg: string; border: string; badgeColor: string }> = {
-                  info:        { bg: "#EFF6FF", border: "#BFDBFE", badgeColor: "#2563EB" },
-                  warning:     { bg: "#FFFBEB", border: "#FDE68A", badgeColor: "#D97706" },
-                  success:     { bg: "#F0FDF4", border: "#BBF7D0", badgeColor: "#16A34A" },
-                  deadline:    { bg: "#FFF1F2", border: "#FECDD3", badgeColor: "#E11D48" },
-                  scholarship: { bg: "#FAF5FF", border: "#DDD6FE", badgeColor: "#7C3AED" },
-                };
-                const tc = typeColors[ann.type] || typeColors.info;
-                return (
-                  <View
-                    key={ann.id}
-                    style={[
-                      styles.card,
-                      { backgroundColor: tc.bg, borderColor: tc.border, borderWidth: 1, marginBottom: 12 },
-                    ]}
-                  >
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                      <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap", flex: 1 }}>
-                        <View style={{ backgroundColor: tc.badgeColor, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
-                          <Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "700", textTransform: "uppercase" }}>
-                            {ann.type}
-                          </Text>
+
+              {!!announcementNotice && (
+                <Text accessibilityLiveRegion="polite" style={styles.announcementNotice}>{announcementNotice}</Text>
+              )}
+              {announcementsLoading ? (
+                <ActivityIndicator color={Brand.primary} style={{ marginTop: 40 }} />
+              ) : announcementListError ? (
+                <View style={styles.emptyCard}>
+                  <Text accessibilityRole="alert" style={styles.announcementError}>{announcementListError}</Text>
+                  <TouchableOpacity style={styles.addBtn} onPress={loadAnnouncements}>
+                    <Text style={styles.addBtnText}>Retry</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : filteredAnnouncements.length === 0 ? (
+                <View style={styles.emptyCard}>
+                  <Ionicons name="notifications-off-outline" size={48} color={Brand.textMuted} />
+                  <Text style={styles.emptyTitle}>
+                    {announcements.length === 0 ? "No Notifications Yet" : "No Notifications Found"}
+                  </Text>
+                  <Text style={styles.emptySub}>
+                    {announcements.length === 0 ? "Click 'Post Notification' above to create one." : "Try a different title, message, or stream."}
+                  </Text>
+                </View>
+              ) : (
+                filteredAnnouncements.map((ann: any) => {
+                  const typeColors: Record<string, { bg: string; color: string }> = {
+                    info:        { bg: "#EFF6FF", color: "#2563EB" },
+                    warning:     { bg: "#FFFBEB", color: "#D97706" },
+                    success:     { bg: "#F0FDF4", color: "#16A34A" },
+                    deadline:    { bg: "#FFF1F2", color: "#E11D48" },
+                    scholarship: { bg: "#FAF5FF", color: "#7C3AED" },
+                  };
+                  const tc = typeColors[ann.type] || typeColors.info;
+                  return (
+                    <View key={ann.id} style={styles.card}>
+                      <View style={styles.cardTopRow}>
+                        <View style={styles.announcementBadges}>
+                          <View style={[styles.announcementTypeBadge, { backgroundColor: tc.bg }]}>
+                            <Text style={[styles.announcementTypeText, { color: tc.color }]}>
+                              {ann.type}
+                            </Text>
+                          </View>
+                          {ann.is_pinned && (
+                            <View style={{ backgroundColor: "#FEE2E2", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 3 }}>
+                              <Ionicons name="pin" size={10} color="#DC2626" />
+                              <Text style={{ color: "#DC2626", fontSize: 10, fontWeight: "600" }}>Pinned</Text>
+                            </View>
+                          )}
+                          {ann.target_stream ? (
+                            <View style={styles.locationPill}>
+                              <Text style={styles.locationPillText}>{ann.target_stream}</Text>
+                            </View>
+                          ) : null}
                         </View>
-                        {ann.is_pinned && (
-                          <View style={{ backgroundColor: "#FEE2E2", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 3 }}>
-                            <Ionicons name="pin" size={10} color="#DC2626" />
-                            <Text style={{ color: "#DC2626", fontSize: 10, fontWeight: "600" }}>Pinned</Text>
-                          </View>
-                        )}
-                        {ann.target_stream ? (
-                          <View style={{ backgroundColor: "rgba(0,0,0,0.07)", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8 }}>
-                            <Text style={{ fontSize: 10, fontWeight: "500", color: "#374151" }}>{ann.target_stream}</Text>
-                          </View>
-                        ) : null}
+                        <View style={styles.cardActionGroup}>
+                          <TouchableOpacity accessibilityLabel="Edit announcement" style={styles.iconActionBtn} onPress={() => openEditAnnouncementModal(ann)}>
+                            <Ionicons name="pencil" size={16} color={Brand.primary} />
+                          </TouchableOpacity>
+                          <TouchableOpacity accessibilityLabel="Delete announcement" style={[styles.iconActionBtn, styles.deleteBtn]} onPress={() => handleDeleteAnnouncement(ann)}>
+                            <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                          </TouchableOpacity>
+                        </View>
                       </View>
-                      <View style={{ flexDirection: "row", gap: 8 }}>
-                        <TouchableOpacity accessibilityLabel="Edit announcement" style={[styles.iconActionBtn, { backgroundColor: '#EFF6FF' }]} onPress={() => openEditAnnouncementModal(ann)}>
-                          <Ionicons name="pencil" size={14} color={Brand.primary} />
-                        </TouchableOpacity>
-                        <TouchableOpacity accessibilityLabel="Delete announcement" style={[styles.iconActionBtn, styles.deleteBtn]} onPress={() => handleDeleteAnnouncement(ann)}>
-                          <Ionicons name="trash" size={14} color="#EF4444" />
-                        </TouchableOpacity>
-                      </View>
+                      <Text style={styles.uniCardTitle}>{ann.title}</Text>
+                      <Text style={styles.uniCardDesc}>{ann.message}</Text>
+                      <Text style={styles.announcementDate}>
+                        {new Date(ann.created_at).toLocaleDateString("en-LK", { day: "numeric", month: "short", year: "numeric" })}
+                      </Text>
                     </View>
-                    <Text style={{ fontSize: 14, fontWeight: "700", color: Brand.text, marginBottom: 4 }}>{ann.title}</Text>
-                    <Text style={{ fontSize: 13, color: Brand.textSecondary, lineHeight: 18 }}>{ann.message}</Text>
-                    <Text style={{ fontSize: 11, color: Brand.textMuted, marginTop: 8 }}>
-                      {new Date(ann.created_at).toLocaleDateString("en-LK", { day: "numeric", month: "short", year: "numeric" })}
-                    </Text>
-                  </View>
-                );
-              })
-            )}
-          </View>
+                  );
+                })
+              )}
+            </View>
+          )}
         </ScrollView>
       )}
 
@@ -2750,6 +2767,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   deleteBtn: { backgroundColor: "#FEE2E2" },
+  announcementBadges: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 8, flex: 1, marginRight: 8 },
+  announcementTypeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  announcementTypeText: { fontSize: 12, fontWeight: "800", textTransform: "uppercase" },
+  announcementDate: { fontSize: 12, color: Brand.textMuted, marginTop: 8 },
   emptyCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 14,

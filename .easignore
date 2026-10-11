@@ -1,0 +1,43 @@
+# EAS archives the Git repository root. Only the Frontend app is needed.
+/Backend
+/.git
+.claude
+.vscode
+
+# Dependencies and generated Expo output (from Frontend/.gitignore).
+node_modules
+.expo
+dist
+web-build
+expo-env.d.ts
+.kotlin
+*.orig.*
+.metro-health-check*
+*.tsbuildinfo
+example
+/Frontend/ios
+/Frontend/android
+
+# Local environment and signing files must not be uploaded.
+.env
+.env.*
+credentials.json
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.pem
+*.mobileprovision
+
+# Logs and OS metadata.
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store
+
+# Preserve the app manifests with their exact Git-tracked casing.
+!/Frontend/package.json
+!/Frontend/package-lock.json
+!/Frontend/app.json
+!/Frontend/eas.json

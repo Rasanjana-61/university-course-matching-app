@@ -25,6 +25,57 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
+## Build an Android APK from PowerShell
+
+The app directory is `Frontend` in both the filesystem and Git. Always enter it
+with that exact casing: EAS derives its Linux build directory from the launch
+path, so launching from `frontend` can make it look for a nonexistent directory.
+The lowercase `name` in `package.json` does not control the app directory.
+
+From anywhere inside this repository:
+
+```powershell
+$repoRoot = (git rev-parse --show-toplevel).Trim()
+Set-Location -LiteralPath (Join-Path $repoRoot 'Frontend')
+```
+
+Inspect the upload before building. Keep the output outside the repository:
+
+```powershell
+$archiveOutput = Join-Path $env:TEMP ('university-eas-archive-' + [guid]::NewGuid().ToString('N'))
+npx eas-cli@latest build:inspect --platform android --profile preview --stage archive --output "$archiveOutput"
+if ($LASTEXITCODE -ne 0) { throw 'EAS archive inspection failed.' }
+$archivedApp = Get-ChildItem -LiteralPath $archiveOutput -Directory | Where-Object { $_.Name -ceq 'Frontend' }
+if (-not $archivedApp -or -not (Test-Path -LiteralPath (Join-Path $archivedApp.FullName 'package.json'))) {
+    throw 'The archive must contain Frontend/package.json with this exact directory casing.'
+}
+```
+
+The repository-root `.easignore` excludes backend files, Git history, local
+environment files, signing files, and generated output. It keeps the app's
+package manifests, Expo configuration, EAS configuration, source, and assets.
+
+Build using the existing linked EAS project and signing credentials:
+
+```powershell
+npx eas-cli@latest build --platform android --profile preview --clear-cache
+```
+
+The `preview` profile uses internal distribution and explicitly produces an APK.
+It also increments the Android `versionCode` using the existing EAS remote
+version source when the build starts. Keep the same linked project and signing
+credentials so the APK can update the installed app.
+The API service uses `https://abc-self-psi.vercel.app/api` on every platform.
+
+The installed launcher name is **CAREER MATCH**. Launcher assets reuse the
+welcome screen's white Ionicons `school` glyph on `Brand.primary` (`#1A56DB`).
+The 1024px adaptive foreground and themed monochrome icon have transparent
+padding, with the cap inside Android's 66/108 safe circle. The adaptive
+background uses the brand color directly, without the old Expo background
+image. Asset provenance is documented in `assets/images/career-match-icons.md`.
+There is no checked-in native Android project; EAS generates its launcher name
+and icon resources from `app.json`.
+
 ## Get a fresh project
 
 When you're ready, run:

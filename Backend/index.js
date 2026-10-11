@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
+import { pathToFileURL } from "node:url";
 import { initDB } from "./config/db.js";
 
 import universitiesRoute from "./routes/universitiesRoute.js";
@@ -61,11 +62,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: "Internal server error", error: err.message });
 });
 
-// Start Express Server and Initialize Neon Database
-app.listen(PORT, () => {
-  console.log(`🚀 Server is up and running on port http://localhost:${PORT}`);
-  console.log(`📡 Health Check: http://localhost:${PORT}/api/health`);
-});
+// Vercel imports this app with all routes registered, including announcements.
+export default app;
 
 async function startDBWithRetry(retries = 5, delay = 2000) {
   for (let i = 1; i <= retries; i++) {
@@ -83,5 +81,16 @@ async function startDBWithRetry(retries = 5, delay = 2000) {
   }
 }
 
-startDBWithRetry();
+// Only start a standalone server and seed the database for local execution.
+// Serverless imports must not open a listener or run background seed jobs.
+const isMainModule = process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isMainModule && !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server is up and running on port http://localhost:${PORT}`);
+    console.log(`📡 Health Check: http://localhost:${PORT}/api/health`);
+  });
+  startDBWithRetry();
+}
 

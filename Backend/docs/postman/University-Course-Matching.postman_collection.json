@@ -1,0 +1,3220 @@
+{
+  "info": {
+    "_postman_id": "0192cb08-5000-4000-8000-000000000001",
+    "name": "University Course Matching API - source-audited endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "57 explicit endpoints inspected on 2026-10-08. Expected successes come from source, not runtime results. Health GET attempted at http://localhost:5000/api/health: ECONNREFUSED. No other requests executed. This collection contains writes/deletes; the agent did not execute it. See API_TESTING.md for validation, response models, test order and side effects. No live credentials or tokens are included."
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "item": [
+    {
+      "name": "00 Health",
+      "item": [
+        {
+          "name": "GET /api/health - Check service availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "description": "Check service availability.\n\nSource: Backend/index.js:33.\n\nRuntime: Attempted GET on 2026-10-08; ECONNREFUSED, no HTTP response.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: No request parameters or body.\n\nExpected success HTTP 200; structure Health:\n{\n  \"status\": \"ok\",\n  \"service\": \"University Course Matching API\",\n  \"timestamp\": \"ISO-8601 string\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 500 for database/server/type/constraint errors.\n\nSide effects: No database access."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.status).to.eql(\"ok\");",
+                  "  pm.expect(result).to.have.property(\"service\");",
+                  "  pm.expect(result).to.have.property(\"timestamp\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 Student authentication",
+      "item": [
+        {
+          "name": "POST /api/auth/register - Register a student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Register a student.\n\nSource: Backend/routes/authRoute.js:15.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: fullName must be a string with at least 2 characters after trimming; email must match /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/ after trim/lowercase; password must be a string of at least 6 characters. Email is normalized. stream defaults to Physical Science; district Colombo; school empty; zScore 0; interests and preferredLocations empty arrays. No stream/district enum or z-score range is enforced. Use arrays of strings for the PostgreSQL text[] fields.\n\nExpected success HTTP 201; structure StudentAuth:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"token\": \"issued JWT string (not a sample token)\",\n  \"data\": {\n    \"id\": \"integer\",\n    \"fullName\": \"string\",\n    \"email\": \"string\",\n    \"school\": \"string\",\n    \"stream\": \"string\",\n    \"district\": \"string\",\n    \"zScore\": \"number\",\n    \"interests\": \"string[]\",\n    \"preferredLocations\": \"string[]\",\n    \"savedCourseIds\": \"integer[]\",\n    \"subjects\": \"JSON[]\"\n  }\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 validation; 409 account already has a password; 500 server/database error.\n\nSide effects: Writes database records.\n\nNotes: If an existing profile has no password, registration updates that record. Its existing z-score/interests/preferences are retained in that branch.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Postman Test Student\",\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{password}}\",\n  \"stream\": \"Physical Science\",\n  \"district\": \"Colombo\",\n  \"school\": \"Example College\",\n  \"zScore\": 1.8,\n  \"interests\": [\n    \"Computing\"\n  ],\n  \"preferredLocations\": [\n    \"Colombo\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 201 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"token\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});",
+                  "if (pm.response.code === 201 && result && result.success === true && typeof result.token === \"string\" && result.token.length > 0) {",
+                  "  pm.environment.set(\"token\", result.token);",
+                  "  if (result.data && result.data.id !== undefined) pm.environment.set(\"studentId\", String(result.data.id));",
+                  "  if (result.data && result.data.email) pm.environment.set(\"studentEmail\", result.data.email);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /api/auth/login - Log in a student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Log in a student.\n\nSource: Backend/routes/authRoute.js:157.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: email must match the email regex; password must be a nonempty string. Existing student account required; comparison is against its stored password hash.\n\nExpected success HTTP 200; structure StudentAuth:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"token\": \"issued JWT string (not a sample token)\",\n  \"data\": {\n    \"id\": \"integer\",\n    \"fullName\": \"string\",\n    \"email\": \"string\",\n    \"school\": \"string\",\n    \"stream\": \"string\",\n    \"district\": \"string\",\n    \"zScore\": \"number\",\n    \"interests\": \"string[]\",\n    \"preferredLocations\": \"string[]\",\n    \"savedCourseIds\": \"integer[]\",\n    \"subjects\": \"JSON[]\"\n  }\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 validation; 401 invalid credentials; 500 server/database error.\n\nSide effects: May WRITE: if the existing student has no password, login saves a hash of the supplied password.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"token\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});",
+                  "if (pm.response.code === 200 && result && result.success === true && typeof result.token === \"string\" && result.token.length > 0) {",
+                  "  pm.environment.set(\"token\", result.token);",
+                  "  if (result.data && result.data.id !== undefined) pm.environment.set(\"studentId\", String(result.data.id));",
+                  "  if (result.data && result.data.email) pm.environment.set(\"studentEmail\", result.data.email);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /api/auth/me - Read the authenticated student",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Read the authenticated student.\n\nSource: Backend/routes/authRoute.js:244.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Authorization: Bearer {{token}}.\n\nAuthentication/roles: Student JWT; no role check.\n\nParameters: none.\n\nValidation: A valid student JWT signed with JWT_SECRET is required. There is no role claim check; decoded.id must identify an existing student.\n\nExpected success HTTP 200; structure StudentMe:\n{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"integer\",\n    \"fullName\": \"string\",\n    \"email\": \"string\",\n    \"school\": \"string\",\n    \"stream\": \"string\",\n    \"district\": \"string\",\n    \"zScore\": \"number\",\n    \"interests\": \"string[]\",\n    \"preferredLocations\": \"string[]\",\n    \"savedCourseIds\": \"integer[]\",\n    \"subjects\": \"JSON[]\"\n  }\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 401 missing/invalid/expired token (also catches lookup errors); 404 no matching student.\n\nSide effects: SELECT only, following the inspected handler."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /api/auth/forgot-password - Create and send a reset OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "description": "Create and send a reset OTP.\n\nSource: Backend/routes/authRoute.js:287.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: Valid email regex and an existing student account required. Replaces prior reset codes with a 15-minute OTP.\n\nExpected success HTTP 200; structure Forgot:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"demoOtp\": \"6-digit string; omitted in production\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 invalid email; 404 account not found; 500 reset/email/database error.\n\nSide effects: Writes password_resets and sends email (or logs email using the development fallback).\n\nNotes: demoOtp is present only when NODE_ENV is not production. Use a newly issued OTP, never a made-up code.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{studentEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /api/auth/verify-otp - Verify a reset OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/verify-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "verify-otp"
+              ]
+            },
+            "description": "Verify a reset OTP.\n\nSource: Backend/routes/authRoute.js:345.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: email and otp must be truthy; email is lowercased/trimmed and otp is stringified/trimmed. No separate six-digit or email-format validation is enforced here. Matching unexpired database code required.\n\nExpected success HTTP 200; structure Message:\n{\n  \"success\": true,\n  \"message\": \"string\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 missing or invalid/expired code; 500 server/database error.\n\nSide effects: SELECT only; does not consume the code or issue a reset token.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"otp\": \"{{otp}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /api/auth/reset-password - Reset a student password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "reset-password"
+              ]
+            },
+            "description": "Reset a student password.\n\nSource: Backend/routes/authRoute.js:391.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: email, otp, newPassword must be truthy; newPassword must be a string of at least 6 characters. Requires a matching unexpired OTP. Verifying the OTP first is helpful but not mandatory.\n\nExpected success HTTP 200; structure Message:\n{\n  \"success\": true,\n  \"message\": \"string\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 missing fields/short password/invalid OTP; 404 student missing; 500 server/database error.\n\nSide effects: Updates the student password and deletes reset codes.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"otp\": \"{{otp}}\",\n  \"newPassword\": \"{{newPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 Universities",
+      "item": [
+        {
+          "name": "GET /api/universities - List universities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/universities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "universities"
+              ]
+            },
+            "description": "List universities.\n\nSource: Backend/routes/universitiesRoute.js:7.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: No filters or pagination.\n\nExpected success HTTP 200; structure UniversityList:\n{\n  \"success\": true,\n  \"count\": \"integer\",\n  \"data\": \"University[] with courses_count integer\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 500 for database/server/type/constraint errors.\n\nSide effects: SELECT only, following the inspected handler.\n\nNotes: Ordered by name; adds courses_count."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"count\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "  pm.expect(result.data).to.be.an(\"array\");",
+                  "  pm.expect(result.count).to.be.a(\"number\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /api/universities/:id - Read a university with its courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/universities/{{universityId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "universities",
+                "{{universityId}}"
+              ]
+            },
+            "description": "Read a university with its courses.\n\nSource: Backend/routes/universitiesRoute.js:26.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Path id: existing integer; Postman {{universityId}}.\n\nValidation: Existing integer university id required.\n\nExpected success HTTP 200; structure UniversityDetail:\n{\n  \"success\": true,\n  \"data\": \"University with courses: Course[]\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: SELECT only, following the inspected handler."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "  pm.expect(result.data).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /api/universities - Create a university",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/universities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "universities"
+              ]
+            },
+            "description": "Create a university.\n\nSource: Backend/routes/universitiesRoute.js:49.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: name, shortName (or short_name), location, district must be nonempty strings after trim. Optional description/website are trimmed. logoUrl/logo_url and backgroundImageUrl/background_image_url aliases are accepted. short_name is UNIQUE in PostgreSQL; repeat creation can produce a 500. No URL-format validation is enforced.\n\nExpected success HTTP 201; structure UniversityWrite:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"data\": \"University\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 for explicit required-field/enum validation, where implemented; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Test University\",\n  \"shortName\": \"PMTEST\",\n  \"location\": \"Colombo\",\n  \"district\": \"Colombo\",\n  \"description\": \"Synthetic Postman test university.\",\n  \"website\": \"https://example.com\",\n  \"logoUrl\": \"https://example.com/logo.png\",\n  \"backgroundImageUrl\": \"https://example.com/banner.png\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 201 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});",
+                  "if (pm.response.code === 201 && result && result.success === true && result.data && result.data.id !== undefined) {",
+                  "  pm.environment.set(\"universityId\", String(result.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "PUT /api/universities/:id - Replace a university's editable fields",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/universities/{{universityId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "universities",
+                "{{universityId}}"
+              ]
+            },
+            "description": "Replace a university's editable fields.\n\nSource: Backend/routes/universitiesRoute.js:81.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: Path id: existing integer; Postman {{universityId}}.\n\nValidation: name, shortName (or short_name), location, district must be nonempty strings after trim. Optional description/website are trimmed. logoUrl/logo_url and backgroundImageUrl/background_image_url aliases are accepted. short_name is UNIQUE in PostgreSQL; repeat creation can produce a 500. No URL-format validation is enforced.\n\nExpected success HTTP 200; structure UniversityWrite:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"data\": \"University\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 for explicit required-field/enum validation, where implemented; 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nNotes: Required fields must be resent. Omitted optional description/website/images become null.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Test University\",\n  \"shortName\": \"PMTEST\",\n  \"location\": \"Colombo\",\n  \"district\": \"Colombo\",\n  \"description\": \"Synthetic Postman test university.\",\n  \"website\": \"https://example.com\",\n  \"logoUrl\": \"https://example.com/logo.png\",\n  \"backgroundImageUrl\": \"https://example.com/banner.png\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "DELETE /api/universities/:id - Delete a university and its courses",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/universities/{{universityId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "universities",
+                "{{universityId}}"
+              ]
+            },
+            "description": "Delete a university and its courses.\n\nSource: Backend/routes/universitiesRoute.js:127.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Path id: existing integer; Postman {{universityId}}.\n\nValidation: Existing integer university id required.\n\nExpected success HTTP 200; structure UniversityDelete:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"data\": {\n    \"id\": \"integer\",\n    \"name\": \"string\"\n  }\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Database ON DELETE CASCADE removes its courses."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 Courses",
+      "item": [
+        {
+          "name": "GET /api/courses - List and filter courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/courses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "courses"
+              ],
+              "query": [
+                {
+                  "key": "stream",
+                  "value": "Physical Science",
+                  "description": "Case-insensitive stream match; absent, empty, All, undefined or null strings disable filter.",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "Computing",
+                  "description": "Substring search in course name/description/university name; empty, undefined or null strings disable filter.",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List and filter courses.\n\nSource: Backend/routes/coursesRoute.js:7.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Query stream (optional): Case-insensitive stream match; absent, empty, All, undefined or null strings disable filter. Example: Physical Science\nQuery search (optional): Substring search in course name/description/university name; empty, undefined or null strings disable filter. Example: Computing.\n\nValidation: Optional stream and search strings; no pagination.\n\nExpected success HTTP 200; structure CourseList:\n{\n  \"success\": true,\n  \"count\": \"integer\",\n  \"data\": \"Course[] with university_name, university_short_name, university_location\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 500 for database/server/type/constraint errors.\n\nSide effects: SELECT only, following the inspected handler."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"count\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "  pm.expect(result.data).to.be.an(\"array\");",
+                  "  pm.expect(result.count).to.be.a(\"number\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /api/courses/:id - Read a course",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/courses/{{courseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                "{{courseId}}"
+              ]
+            },
+            "description": "Read a course.\n\nSource: Backend/routes/coursesRoute.js:87.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Path id: existing integer; Postman {{courseId}}.\n\nValidation: Existing integer course id required.\n\nExpected success HTTP 200; structure CourseDetail:\n{\n  \"success\": true,\n  \"data\": \"Course with university_name, university_short_name, university_location, university_website\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: SELECT only, following the inspected handler."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /api/courses/:id/admission - Read course admission requirements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/courses/{{courseId}}/admission",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                "{{courseId}}",
+                "admission"
+              ]
+            },
+            "description": "Read course admission requirements.\n\nSource: Backend/routes/coursesRoute.js:114.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Path id: existing integer; Postman {{courseId}}.\n\nValidation: Existing integer course id required.\n\nExpected success HTTP 200; structure Admission:\n{\n  \"success\": true,\n  \"data\": {\n    \"courseName\": \"string\",\n    \"universityName\": \"string\",\n    \"stream\": \"string\",\n    \"eligiblePill\": \"string\",\n    \"streamNote\": \"string\",\n    \"requiredSubjects\": [\n      {\n        \"type\": \"string\",\n        \"name\": \"string\"\n      }\n    ],\n    \"subjectsNote\": \"string\",\n    \"grades\": {\n      \"min\": \"string\",\n      \"recommended\": \"string\",\n      \"note\": \"string\"\n    },\n    \"selection\": {\n      \"ranking\": \"string\",\n      \"cutOff\": \"string\",\n      \"note\": \"string\"\n    },\n    \"documents\": {\n      \"required\": \"string\",\n      \"optional\": \"string\",\n      \"note\": \"string\"\n    },\n    \"deadlines\": {\n      \"results\": \"string\",\n      \"applications\": \"string\",\n      \"note\": \"string\"\n    }\n  }\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: SELECT only, following the inspected handler.\n\nNotes: Builds default stream-specific criteria and overlays stored admission_requirements; returned keys can be overridden by the stored object."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /api/courses - Create a course",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/courses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "courses"
+              ]
+            },
+            "description": "Create a course.\n\nSource: Backend/routes/coursesRoute.js:207.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: universityId/university_id, name, code, stream, degreeType/degree_type are required and truthy; the string fields are trimmed. universityId must identify an existing university (foreign key). durationYears/duration_years is parseInt(value) || 4; minZScore/min_z_score is parseFloat(value), default 0; districtCutoffs/district_cutoffs defaults {}; careerPaths/career_paths defaults [] and also accepts a comma-separated string. description defaults empty. No stream enum, positive duration, score range, or numeric validation is enforced. Use a finite decimal fitting DECIMAL(5,4), integer duration, object cutoffs and string[] career paths. admission_requirements is NOT writable by these handlers.\n\nExpected success HTTP 201; structure CourseWrite:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"data\": \"Course\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 for explicit required-field/enum validation, where implemented; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"universityId\": \"{{universityId}}\",\n  \"name\": \"Postman Test Computing\",\n  \"code\": \"PMCS01\",\n  \"stream\": \"Physical Science\",\n  \"degreeType\": \"BSc (Hons)\",\n  \"durationYears\": 4,\n  \"minZScore\": 1.5,\n  \"districtCutoffs\": {\n    \"Colombo\": 1.6,\n    \"Kandy\": 1.5\n  },\n  \"description\": \"Synthetic computing course.\",\n  \"careerPaths\": [\n    \"Software Engineer\",\n    \"Data Analyst\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 201 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});",
+                  "if (pm.response.code === 201 && result && result.success === true && result.data && result.data.id !== undefined) {",
+                  "  pm.environment.set(\"courseId\", String(result.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "PUT /api/courses/:id - Replace a course's editable fields",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/courses/{{courseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                "{{courseId}}"
+              ]
+            },
+            "description": "Replace a course's editable fields.\n\nSource: Backend/routes/coursesRoute.js:252.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: Path id: existing integer; Postman {{courseId}}.\n\nValidation: universityId/university_id, name, code, stream, degreeType/degree_type are required and truthy; the string fields are trimmed. universityId must identify an existing university (foreign key). durationYears/duration_years is parseInt(value) || 4; minZScore/min_z_score is parseFloat(value), default 0; districtCutoffs/district_cutoffs defaults {}; careerPaths/career_paths defaults [] and also accepts a comma-separated string. description defaults empty. No stream enum, positive duration, score range, or numeric validation is enforced. Use a finite decimal fitting DECIMAL(5,4), integer duration, object cutoffs and string[] career paths. admission_requirements is NOT writable by these handlers.\n\nExpected success HTTP 200; structure CourseWrite:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"data\": \"Course\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 for explicit required-field/enum validation, where implemented; 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nNotes: Required fields must be resent. Omitted optional fields revert to handler defaults.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"universityId\": \"{{universityId}}\",\n  \"name\": \"Postman Test Computing\",\n  \"code\": \"PMCS01\",\n  \"stream\": \"Physical Science\",\n  \"degreeType\": \"BSc (Hons)\",\n  \"durationYears\": 4,\n  \"minZScore\": 1.5,\n  \"districtCutoffs\": {\n    \"Colombo\": 1.6,\n    \"Kandy\": 1.5\n  },\n  \"description\": \"Synthetic computing course.\",\n  \"careerPaths\": [\n    \"Software Engineer\",\n    \"Data Analyst\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "DELETE /api/courses/:id - Delete a course",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/courses/{{courseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                "{{courseId}}"
+              ]
+            },
+            "description": "Delete a course.\n\nSource: Backend/routes/coursesRoute.js:307.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Path id: existing integer; Postman {{courseId}}.\n\nValidation: Existing integer course id required.\n\nExpected success HTTP 200; structure CourseDelete:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"data\": {\n    \"id\": \"integer\",\n    \"name\": \"string\"\n  }\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nNotes: Does not clean student_profiles.saved_course_ids."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 Students and saved courses",
+      "item": [
+        {
+          "name": "GET /api/students/:email - Read a student profile by email",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students/{{studentEmail}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "{{studentEmail}}"
+              ]
+            },
+            "description": "Read a student profile by email.\n\nSource: Backend/routes/studentsRoute.js:7.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Path email: URL-encoded student email; Postman {{studentEmail}}.\n\nValidation: Existing student email, matched case-insensitively; use a URL-encoded email path.\n\nExpected success HTTP 200; structure StudentRow:\n{\n  \"success\": true,\n  \"data\": \"StudentProfile (raw DB row, snake_case, includes password column)\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 404 if the student is absent; 500 for database/server/type/constraint errors.\n\nSide effects: SELECT only, following the inspected handler.\n\nNotes: SELECT * includes the password column. Treat any real response as sensitive; no sample password hash is exported."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "PUT /api/students/:email - Update basic student profile fields",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students/{{studentEmail}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "{{studentEmail}}"
+              ]
+            },
+            "description": "Update basic student profile fields.\n\nSource: Backend/routes/studentsRoute.js:26.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: Path email: URL-encoded student email; Postman {{studentEmail}}.\n\nValidation: Existing email required. No required body fields. fullName, school, district use truthy values; interests changes only when an array. location and skills are destructured but ignored.\n\nExpected success HTTP 200; structure StudentRow:\n{\n  \"success\": true,\n  \"data\": \"StudentProfile (raw DB row, snake_case, includes password column)\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 404 student missing; 500 SQL/database/server error.\n\nSide effects: Writes database records.\n\nNotes: Source caveat: NULLIF uses \"\" in SQL, which PostgreSQL treats as a zero-length quoted identifier rather than an empty string literal. The handler declares 200 but is likely to return 500 as written; not runtime verified. RETURNING * also includes password.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Postman Test Student Updated\",\n  \"school\": \"Example College\",\n  \"district\": \"Colombo\",\n  \"interests\": [\n    \"Computing\",\n    \"Technology\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /api/students - Create or upsert a student profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students"
+              ]
+            },
+            "description": "Create or upsert a student profile.\n\nSource: Backend/routes/studentsRoute.js:60.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: Only truthy fullName and email are explicitly required; no email regex/password validation. Defaults: stream Physical Science, zScore 0, district Colombo, school empty, interests/preferredLocations/subjects []. Email is LOWERed but not trimmed. zScore is parseFloat(value) || 0. Non-array subjects becomes []. Subject item shape is not validated; string[] interests/preferences suit the DB.\n\nExpected success HTTP 200; structure StudentRow:\n{\n  \"success\": true,\n  \"data\": \"StudentProfile (raw DB row, snake_case, includes password column)\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 for explicit required-field/enum validation, where implemented; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nNotes: Actual route is POST only, despite a comment saying POST / PUT. Updates stream, z-score, district, interests, preferences and subjects on email conflict; preserves an existing password. RETURNING * includes password.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Postman Test Student\",\n  \"email\": \"{{studentEmail}}\",\n  \"stream\": \"Physical Science\",\n  \"zScore\": 1.8,\n  \"district\": \"Colombo\",\n  \"school\": \"Example College\",\n  \"interests\": [\n    \"Computing\"\n  ],\n  \"preferredLocations\": [\n    \"Colombo\"\n  ],\n  \"subjects\": [\n    {\n      \"name\": \"Combined Mathematics\",\n      \"grade\": \"A\"\n    },\n    {\n      \"name\": \"Physics\",\n      \"grade\": \"B\"\n    },\n    {\n      \"name\": \"Chemistry\",\n      \"grade\": \"B\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});",
+                  "if (pm.response.code === 200 && result && result.success === true && result.data && result.data.id !== undefined) {",
+                  "  pm.environment.set(\"studentId\", String(result.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /api/students/:email/toggle-save - Toggle saving a course",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students/{{studentEmail}}/toggle-save",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "{{studentEmail}}",
+                "toggle-save"
+              ]
+            },
+            "description": "Toggle saving a course.\n\nSource: Backend/routes/studentsRoute.js:115.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: Path email: URL-encoded student email; Postman {{studentEmail}}.\n\nValidation: Existing student email and truthy courseId required; courseId is parseInt(...,10). Use an existing integer course ID. Course existence is not checked and there is no FK on the saved ID array.\n\nExpected success HTTP 200; structure SavedToggle:\n{\n  \"success\": true,\n  \"isSaved\": \"boolean\",\n  \"savedCourseIds\": \"integer[]\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 for explicit required-field/enum validation, where implemented; 404 if the student is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nNotes: Sending the same request twice undoes the save. Response has isSaved and savedCourseIds at the top level.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseId\": \"{{courseId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"isSaved\");",
+                  "  pm.expect(result).to.have.property(\"savedCourseIds\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /api/students/:email/saved-courses - List a student's saved course details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students/{{studentEmail}}/saved-courses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "{{studentEmail}}",
+                "saved-courses"
+              ]
+            },
+            "description": "List a student's saved course details.\n\nSource: Backend/routes/studentsRoute.js:161.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Path email: URL-encoded student email; Postman {{studentEmail}}.\n\nValidation: Student email path required.\n\nExpected success HTTP 200; structure CourseList:\n{\n  \"success\": true,\n  \"count\": \"integer\",\n  \"data\": \"Course[] with university_name, university_short_name, university_location\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 500 for database/server/type/constraint errors.\n\nSide effects: SELECT only, following the inspected handler.\n\nNotes: Missing student or empty saved IDs returns 200 with count 0 and data [], rather than 404."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"count\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "  pm.expect(result.data).to.be.an(\"array\");",
+                  "  pm.expect(result.count).to.be.a(\"number\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "DELETE /api/students/:email - Delete a student account",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/students/{{studentEmail}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "{{studentEmail}}"
+              ]
+            },
+            "description": "Delete a student account.\n\nSource: Backend/routes/studentsRoute.js:192.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Path email: URL-encoded student email; Postman {{studentEmail}}.\n\nValidation: Existing student email required.\n\nExpected success HTTP 200; structure Message:\n{\n  \"success\": true,\n  \"message\": \"string\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 404 if the student is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nNotes: Deletes only student_profiles; does not explicitly delete inquiries, personal notifications or reset codes."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 Matching",
+      "item": [
+        {
+          "name": "POST /api/match - Calculate course recommendations",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/match",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "match"
+              ]
+            },
+            "description": "Calculate course recommendations.\n\nSource: Backend/routes/matchingRoute.js:8.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: Truthy stream and zScore !== undefined required. zScore is parseFloat, with no finite/range check. district defaults Colombo; interests and preferredLocations default []. Use a valid stream string, finite score, and string arrays.\n\nExpected success HTTP 200; structure Match:\n{\n  \"success\": true,\n  \"meta\": {\n    \"stream\": \"string\",\n    \"zScore\": \"number\",\n    \"district\": \"string\",\n    \"totalEvaluated\": \"integer\",\n    \"eligibleCount\": \"integer\",\n    \"reachCount\": \"integer\"\n  },\n  \"data\": {\n    \"topRecommendations\": \"MatchedCourse[] (up to 5)\",\n    \"eligible\": \"MatchedCourse[]\",\n    \"reach\": \"MatchedCourse[]\",\n    \"others\": \"MatchedCourse[]\",\n    \"all\": \"MatchedCourse[]\"\n  }\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 for explicit required-field/enum validation, where implemented; 500 for database/server/type/constraint errors.\n\nSide effects: Read-only calculation using SELECT; no database writes.\n\nNotes: safe if score-minus-cutoff >= 0.15; target >= 0; reach >= -0.10; otherwise unlikely. Sorted by matchScore; topRecommendations contains up to 5.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stream\": \"Physical Science\",\n  \"zScore\": 1.8,\n  \"district\": \"Colombo\",\n  \"interests\": [\n    \"Computing\"\n  ],\n  \"preferredLocations\": [\n    \"Colombo\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"meta\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 Scholarships",
+      "item": [
+        {
+          "name": "GET /api/scholarships - List and filter scholarships",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/scholarships",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scholarships"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Merit",
+                  "description": "Substring search on title/provider/eligibility.",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "Merit",
+                  "description": "Case-insensitive category match.",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List and filter scholarships.\n\nSource: Backend/routes/scholarshipsRoute.js:7.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Query search (optional): Substring search on title/provider/eligibility. Example: Merit\nQuery category (optional): Case-insensitive category match. Example: Merit.\n\nValidation: Optional search/category strings; no pagination.\n\nExpected success HTTP 200; structure ScholarshipList:\n{\n  \"success\": true,\n  \"count\": \"integer\",\n  \"data\": \"Scholarship[]\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 500 for database/server/type/constraint errors.\n\nSide effects: SELECT only, following the inspected handler."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"count\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "  pm.expect(result.data).to.be.an(\"array\");",
+                  "  pm.expect(result.count).to.be.a(\"number\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /api/scholarships/:id - Read a scholarship",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/scholarships/{{scholarshipId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scholarships",
+                "{{scholarshipId}}"
+              ]
+            },
+            "description": "Read a scholarship.\n\nSource: Backend/routes/scholarshipsRoute.js:50.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Path id: existing integer; Postman {{scholarshipId}}.\n\nValidation: Existing integer scholarship id required.\n\nExpected success HTTP 200; structure ScholarshipDetail:\n{\n  \"success\": true,\n  \"data\": \"Scholarship\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: SELECT only, following the inspected handler."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /api/scholarships - Create a scholarship",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/scholarships",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scholarships"
+              ]
+            },
+            "description": "Create a scholarship.\n\nSource: Backend/routes/scholarshipsRoute.js:69.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: title, category, provider, eligibility, value, deadline must be nonempty strings after trim. status defaults Open; description/benefits/requirements/applicationInstructions/officialSourceUrl default empty strings. application_instructions and official_source_url aliases accepted. Category/status are not enum-validated; deadline is an arbitrary string, not parsed as a date.\n\nExpected success HTTP 201; structure ScholarshipWrite:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"data\": \"Scholarship\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 for explicit required-field/enum validation, where implemented; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman Test Scholarship\",\n  \"category\": \"Merit\",\n  \"provider\": \"Example Education Fund\",\n  \"eligibility\": \"A/L passes\",\n  \"value\": \"LKR 10000\",\n  \"deadline\": \"31 Dec 2026\",\n  \"status\": \"Open\",\n  \"description\": \"Synthetic scholarship.\",\n  \"benefits\": \"Tuition support\",\n  \"requirements\": \"A/L result sheet\",\n  \"applicationInstructions\": \"Submit the test application form.\",\n  \"officialSourceUrl\": \"https://example.com/scholarships\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 201 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});",
+                  "if (pm.response.code === 201 && result && result.success === true && result.data && result.data.id !== undefined) {",
+                  "  pm.environment.set(\"scholarshipId\", String(result.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "PUT /api/scholarships/:id - Replace a scholarship's editable fields",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/scholarships/{{scholarshipId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scholarships",
+                "{{scholarshipId}}"
+              ]
+            },
+            "description": "Replace a scholarship's editable fields.\n\nSource: Backend/routes/scholarshipsRoute.js:111.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: Path id: existing integer; Postman {{scholarshipId}}.\n\nValidation: title, category, provider, eligibility, value, deadline must be nonempty strings after trim. status defaults Open; description/benefits/requirements/applicationInstructions/officialSourceUrl default empty strings. application_instructions and official_source_url aliases accepted. Category/status are not enum-validated; deadline is an arbitrary string, not parsed as a date.\n\nExpected success HTTP 200; structure ScholarshipWrite:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"data\": \"Scholarship\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 for explicit required-field/enum validation, where implemented; 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nNotes: Required fields must be resent. Omitted optional fields revert to handler defaults.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman Test Scholarship\",\n  \"category\": \"Merit\",\n  \"provider\": \"Example Education Fund\",\n  \"eligibility\": \"A/L passes\",\n  \"value\": \"LKR 10000\",\n  \"deadline\": \"31 Dec 2026\",\n  \"status\": \"Open\",\n  \"description\": \"Synthetic scholarship.\",\n  \"benefits\": \"Tuition support\",\n  \"requirements\": \"A/L result sheet\",\n  \"applicationInstructions\": \"Submit the test application form.\",\n  \"officialSourceUrl\": \"https://example.com/scholarships\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "DELETE /api/scholarships/:id - Delete a scholarship",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/scholarships/{{scholarshipId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scholarships",
+                "{{scholarshipId}}"
+              ]
+            },
+            "description": "Delete a scholarship.\n\nSource: Backend/routes/scholarshipsRoute.js:165.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Path id: existing integer; Postman {{scholarshipId}}.\n\nValidation: Existing integer scholarship id required.\n\nExpected success HTTP 200; structure ScholarshipDelete:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"data\": {\n    \"id\": \"integer\",\n    \"title\": \"string\"\n  }\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07 Teachers",
+      "item": [
+        {
+          "name": "POST /api/teachers/register - Register a teacher",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/teachers/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "register"
+              ]
+            },
+            "description": "Register a teacher.\n\nSource: Backend/routes/teachersRoute.js:32.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: fullName.trim() must have at least 2 characters; valid email regex; password.length at least 6. Use strings, since wrong types can cause a 500. Optional school and subject default to empty strings. A unique email in the shared teachers table is required.\n\nExpected success HTTP 201; structure StaffAuth:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"token\": \"issued JWT string (not a sample token)\",\n  \"data\": {\n    \"id\": \"integer\",\n    \"fullName\": \"string\",\n    \"email\": \"string\",\n    \"school\": \"string\",\n    \"subject\": \"string\",\n    \"role\": \"stored string\"\n  }\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 validation; 409 shared-table email conflict; 500 server/database error.\n\nSide effects: Writes database records.\n\nNotes: Signs a JWT with role teacher. INSERT omits role, but initDB defines teachers.role default admin, so data.role can be admin even though the token role is teacher.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Postman Test Teacher\",\n  \"email\": \"{{teacherEmail}}\",\n  \"password\": \"{{teacherPassword}}\",\n  \"school\": \"Example College\",\n  \"subject\": \"Physics\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 201 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"token\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});",
+                  "if (pm.response.code === 201 && result && result.success === true && typeof result.token === \"string\" && result.token.length > 0) {",
+                  "  pm.environment.set(\"teacherToken\", result.token);",
+                  "  if (result.data && result.data.id !== undefined) pm.environment.set(\"teacherId\", String(result.data.id));",
+                  "  if (result.data && result.data.email) pm.environment.set(\"teacherEmail\", result.data.email);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /api/teachers/login - Log in through teacher authentication",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/teachers/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "login"
+              ]
+            },
+            "description": "Log in through teacher authentication.\n\nSource: Backend/routes/teachersRoute.js:76.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: Valid email regex and truthy password required; use a nonempty string password. Existing teachers table account and matching bcrypt password required.\n\nExpected success HTTP 200; structure StaffAuth:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"token\": \"issued JWT string (not a sample token)\",\n  \"data\": {\n    \"id\": \"integer\",\n    \"fullName\": \"string\",\n    \"email\": \"string\",\n    \"school\": \"string\",\n    \"subject\": \"string\",\n    \"role\": \"stored string\"\n  }\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 validation; 401 invalid credentials; 500 server/database error.\n\nSide effects: Writes database records.\n\nNotes: Does not check the stored role; issues role teacher in the JWT for any matching teachers table account.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{teacherEmail}}\",\n  \"password\": \"{{teacherPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"token\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});",
+                  "if (pm.response.code === 200 && result && result.success === true && typeof result.token === \"string\" && result.token.length > 0) {",
+                  "  pm.environment.set(\"teacherToken\", result.token);",
+                  "  if (result.data && result.data.id !== undefined) pm.environment.set(\"teacherId\", String(result.data.id));",
+                  "  if (result.data && result.data.email) pm.environment.set(\"teacherEmail\", result.data.email);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /api/teachers/dashboard - Read the teacher dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{teacherToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/teachers/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "dashboard"
+              ]
+            },
+            "description": "Read the teacher dashboard.\n\nSource: Backend/routes/teachersRoute.js:114.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Authorization: Bearer {{teacherToken}}.\n\nAuthentication/roles: Teacher JWT; role teacher.\n\nParameters: none.\n\nValidation: Teacher JWT required.\n\nExpected success HTTP 200; structure TeacherDashboard:\n{\n  \"success\": true,\n  \"data\": {\n    \"summary\": {\n      \"totalStudents\": \"integer\",\n      \"studentsWithZScore\": \"integer\",\n      \"averageZScore\": \"number\",\n      \"totalCourses\": \"integer\",\n      \"totalUniversities\": \"integer\"\n    },\n    \"streamDistribution\": [\n      {\n        \"stream\": \"string\",\n        \"count\": \"integer\"\n      }\n    ],\n    \"districtDistribution\": [\n      {\n        \"district\": \"string\",\n        \"count\": \"integer\"\n      }\n    ],\n    \"zScoreRanges\": [\n      {\n        \"range\": \"string\",\n        \"count\": \"integer\"\n      }\n    ],\n    \"recentStudents\": \"StaffStudent[]\",\n    \"topStudents\": \"StaffStudent[] without joinedAt\"\n  }\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 401 missing/invalid/expired token; 403 wrong role; 500 for database/server/type/constraint errors.\n\nSide effects: SELECT only, following the inspected handler."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /api/teachers/students - List students for the teacher dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{teacherToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/teachers/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "students"
+              ],
+              "query": [
+                {
+                  "key": "stream",
+                  "value": "Physical Science",
+                  "description": "Case-insensitive exact stream match.",
+                  "disabled": true
+                },
+                {
+                  "key": "district",
+                  "value": "Colombo",
+                  "description": "Case-insensitive exact district match.",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "Postman",
+                  "description": "Case-insensitive substring match on student full_name or email.",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List students for the teacher dashboard.\n\nSource: Backend/routes/teachersRoute.js:184.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Authorization: Bearer {{teacherToken}}.\n\nAuthentication/roles: Teacher JWT; role teacher.\n\nParameters: Query stream (optional): Case-insensitive exact stream match. Example: Physical Science\nQuery district (optional): Case-insensitive exact district match. Example: Colombo\nQuery search (optional): Case-insensitive substring match on student full_name or email. Example: Postman.\n\nValidation: Teacher JWT required; optional filters.\n\nExpected success HTTP 200; structure StaffStudentList:\n{\n  \"success\": true,\n  \"data\": \"StaffStudent[]\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 401 missing/invalid/expired token; 403 wrong role; 500 for database/server/type/constraint errors.\n\nSide effects: SELECT only, following the inspected handler.\n\nNotes: Filters in memory after fetching the newest 200 students; no pagination and no total count."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "  pm.expect(result.data).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "08 Admin and assessment questions",
+      "item": [
+        {
+          "name": "POST /api/admin/register - Register an admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "register"
+              ]
+            },
+            "description": "Register an admin.\n\nSource: Backend/routes/adminRoute.js:32.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: fullName.trim() must have at least 2 characters; valid email regex; password.length at least 6. Use strings, since wrong types can cause a 500. Optional school and subject default to empty strings. A unique email in the shared teachers table is required.\n\nExpected success HTTP 201; structure StaffAuth:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"token\": \"issued JWT string (not a sample token)\",\n  \"data\": {\n    \"id\": \"integer\",\n    \"fullName\": \"string\",\n    \"email\": \"string\",\n    \"school\": \"string\",\n    \"subject\": \"string\",\n    \"role\": \"stored string\"\n  }\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 validation; 409 shared-table email conflict; 500 server/database error.\n\nSide effects: Writes database records.\n\nNotes: Public registration inserts role admin; no administrator token is required.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Postman Test Admin\",\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"school\": \"Example College\",\n  \"subject\": \"Physics\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 201 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"token\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});",
+                  "if (pm.response.code === 201 && result && result.success === true && typeof result.token === \"string\" && result.token.length > 0) {",
+                  "  pm.environment.set(\"adminToken\", result.token);",
+                  "  if (result.data && result.data.id !== undefined) pm.environment.set(\"adminId\", String(result.data.id));",
+                  "  if (result.data && result.data.email) pm.environment.set(\"adminEmail\", result.data.email);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /api/admin/login - Log in through admin authentication",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "login"
+              ]
+            },
+            "description": "Log in through admin authentication.\n\nSource: Backend/routes/adminRoute.js:75.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: Valid email regex and truthy password required; use a nonempty string password. Existing teachers table account and matching bcrypt password required.\n\nExpected success HTTP 200; structure StaffAuth:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"token\": \"issued JWT string (not a sample token)\",\n  \"data\": {\n    \"id\": \"integer\",\n    \"fullName\": \"string\",\n    \"email\": \"string\",\n    \"school\": \"string\",\n    \"subject\": \"string\",\n    \"role\": \"stored string\"\n  }\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 validation; 401 invalid credentials; 500 server/database error.\n\nSide effects: Writes database records.\n\nNotes: Does not reject other stored roles at login; signs the stored role (or admin fallback). Protected routes subsequently require admin or teacher.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"token\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});",
+                  "if (pm.response.code === 200 && result && result.success === true && typeof result.token === \"string\" && result.token.length > 0) {",
+                  "  pm.environment.set(\"adminToken\", result.token);",
+                  "  if (result.data && result.data.id !== undefined) pm.environment.set(\"adminId\", String(result.data.id));",
+                  "  if (result.data && result.data.email) pm.environment.set(\"adminEmail\", result.data.email);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /api/admin/dashboard - Read the admin dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "dashboard"
+              ]
+            },
+            "description": "Read the admin dashboard.\n\nSource: Backend/routes/adminRoute.js:112.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Authorization: Bearer {{adminToken}}.\n\nAuthentication/roles: Admin-signature JWT; role admin or teacher.\n\nParameters: none.\n\nValidation: JWT verified with ADMIN_JWT_SECRET and role admin or teacher.\n\nExpected success HTTP 200; structure AdminDashboard:\n{\n  \"success\": true,\n  \"data\": {\n    \"summary\": {\n      \"totalStudents\": \"integer\",\n      \"studentsWithZScore\": \"integer\",\n      \"averageZScore\": \"number\",\n      \"totalCourses\": \"integer\",\n      \"totalUniversities\": \"integer\",\n      \"totalQuestions\": \"integer\"\n    },\n    \"streamDistribution\": [\n      {\n        \"stream\": \"string\",\n        \"count\": \"integer\"\n      }\n    ],\n    \"districtDistribution\": [\n      {\n        \"district\": \"string\",\n        \"count\": \"integer\"\n      }\n    ],\n    \"zScoreRanges\": [\n      {\n        \"range\": \"string\",\n        \"count\": \"integer\"\n      }\n    ],\n    \"recentStudents\": \"StaffStudent[]\",\n    \"topStudents\": \"StaffStudent[] without joinedAt\"\n  }\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 401 missing/invalid/expired token; 403 wrong role; 500 for database/server/type/constraint errors.\n\nSide effects: SELECT only, following the inspected handler."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /api/admin/students - List students for the admin dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "students"
+              ],
+              "query": [
+                {
+                  "key": "stream",
+                  "value": "Physical Science",
+                  "description": "Case-insensitive exact stream match.",
+                  "disabled": true
+                },
+                {
+                  "key": "district",
+                  "value": "Colombo",
+                  "description": "Case-insensitive exact district match.",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "Postman",
+                  "description": "Case-insensitive substring match on student full_name or email.",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List students for the admin dashboard.\n\nSource: Backend/routes/adminRoute.js:184.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Authorization: Bearer {{adminToken}}.\n\nAuthentication/roles: Admin-signature JWT; role admin or teacher.\n\nParameters: Query stream (optional): Case-insensitive exact stream match. Example: Physical Science\nQuery district (optional): Case-insensitive exact district match. Example: Colombo\nQuery search (optional): Case-insensitive substring match on student full_name or email. Example: Postman.\n\nValidation: Admin-signature JWT with role admin or teacher; optional filters.\n\nExpected success HTTP 200; structure StaffStudentList:\n{\n  \"success\": true,\n  \"data\": \"StaffStudent[]\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 401 missing/invalid/expired token; 403 wrong role; 500 for database/server/type/constraint errors.\n\nSide effects: SELECT only, following the inspected handler.\n\nNotes: Filters after fetching the newest 200 students; no pagination and no total count."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "  pm.expect(result.data).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /api/admin/questions - List assessment questions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/questions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "questions"
+              ]
+            },
+            "description": "List assessment questions.\n\nSource: Backend/routes/adminRoute.js:212.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: No auth required; no query filters.\n\nExpected success HTTP 200; structure QuestionList:\n{\n  \"success\": true,\n  \"data\": \"AssessmentQuestion[]\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 500 for database/server/type/constraint errors.\n\nSide effects: SELECT only, following the inspected handler.\n\nNotes: Returns ALL questions including inactive ones, ordered by sort_order then id. There is no assessment submit/result endpoint."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "  pm.expect(result.data).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /api/admin/questions - Create an assessment question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/questions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "questions"
+              ]
+            },
+            "description": "Create an assessment question.\n\nSource: Backend/routes/adminRoute.js:222.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json; Authorization: Bearer {{adminToken}}.\n\nAuthentication/roles: Admin-signature JWT; role admin or teacher.\n\nParameters: none.\n\nValidation: text must be a nonempty string after trim; category must be exactly Technology, Business, Creative or Social. sortOrder should be an integer for the DB; no application integer validation. sortOrder defaults to 99 when falsy (including 0); isActive is not read on create, so DB default true applies.\n\nExpected success HTTP 201; structure QuestionWrite:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"data\": \"AssessmentQuestion\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 for explicit required-field/enum validation, where implemented; 401 missing/invalid/expired token; 403 wrong role; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"I enjoy solving problems using technology.\",\n  \"category\": \"Technology\",\n  \"sortOrder\": 11\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 201 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});",
+                  "if (pm.response.code === 201 && result && result.success === true && result.data && result.data.id !== undefined) {",
+                  "  pm.environment.set(\"questionId\", String(result.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "PUT /api/admin/questions/:id - Update an assessment question",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/questions/{{questionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "questions",
+                "{{questionId}}"
+              ]
+            },
+            "description": "Update an assessment question.\n\nSource: Backend/routes/adminRoute.js:241.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json; Authorization: Bearer {{adminToken}}.\n\nAuthentication/roles: Admin-signature JWT; role admin or teacher.\n\nParameters: Path id: existing integer; Postman {{questionId}}.\n\nValidation: text must be a nonempty string after trim; category must be exactly Technology, Business, Creative or Social. sortOrder should be an integer for the DB; no application integer validation. Required text/category must be resent. sortOrder defaults to 99 only when null/undefined; isActive defaults true only when null/undefined. Use a boolean isActive.\n\nExpected success HTTP 200; structure QuestionWrite:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"data\": \"AssessmentQuestion\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 for explicit required-field/enum validation, where implemented; 401 missing/invalid/expired token; 403 wrong role; 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"I enjoy solving technical problems.\",\n  \"category\": \"Technology\",\n  \"sortOrder\": 11,\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "DELETE /api/admin/questions/:id - Delete an assessment question",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/questions/{{questionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "questions",
+                "{{questionId}}"
+              ]
+            },
+            "description": "Delete an assessment question.\n\nSource: Backend/routes/adminRoute.js:267.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Authorization: Bearer {{adminToken}}.\n\nAuthentication/roles: Admin-signature JWT; role admin or teacher.\n\nParameters: Path id: existing integer; Postman {{questionId}}.\n\nValidation: Existing integer question id, parsed with parseInt.\n\nExpected success HTTP 200; structure Message:\n{\n  \"success\": true,\n  \"message\": \"string\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 401 missing/invalid/expired token; 403 wrong role; 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "09 Inquiries",
+      "item": [
+        {
+          "name": "POST /api/inquiries - Submit a student inquiry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/inquiries",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "inquiries"
+              ]
+            },
+            "description": "Submit a student inquiry.\n\nSource: Backend/routes/inquiriesRoute.js:29.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: studentEmail, subject, message must be truthy strings. subject/message are trimmed after this check, so whitespace-only strings pass the truthiness check. No email regex/category enum. studentName defaults Student; category defaults Admissions; status always Pending.\n\nExpected success HTTP 201; structure InquiryWrite:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"data\": \"Inquiry\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 for explicit required-field/enum validation, where implemented; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentEmail\": \"{{studentEmail}}\",\n  \"studentName\": \"Postman Test Student\",\n  \"category\": \"Admissions\",\n  \"subject\": \"Postman test admissions question\",\n  \"message\": \"What documents are required for a computing application?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 201 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});",
+                  "if (pm.response.code === 201 && result && result.success === true && result.data && result.data.id !== undefined) {",
+                  "  pm.environment.set(\"inquiryId\", String(result.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /api/inquiries/my - List inquiries for a student email",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/inquiries/my?email={{studentEmail}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "inquiries",
+                "my"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "{{studentEmail}}",
+                  "description": "Required student email.",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "List inquiries for a student email.\n\nSource: Backend/routes/inquiriesRoute.js:65.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Query email (required): Required student email. Example: {{studentEmail}}.\n\nValidation: Required nonempty email query; case-insensitive trimmed matching, no email regex.\n\nExpected success HTTP 200; structure InquiryList:\n{\n  \"success\": true,\n  \"data\": \"Inquiry[]\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 if the required email query is absent; 500 for database/server/type/constraint errors.\n\nSide effects: SELECT only, following the inspected handler."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "  pm.expect(result.data).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /api/inquiries - List all inquiries for an advisor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/inquiries",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "inquiries"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Pending",
+                  "description": "Case-insensitive status filter.",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "Admissions",
+                  "description": "Case-insensitive category filter.",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "Postman",
+                  "description": "Substring search on subject/message/student name/email.",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List all inquiries for an advisor.\n\nSource: Backend/routes/inquiriesRoute.js:86.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Authorization: Bearer {{adminToken}}.\n\nAuthentication/roles: Admin-signature JWT; role admin or teacher.\n\nParameters: Query status (optional): Case-insensitive status filter. Example: Pending\nQuery category (optional): Case-insensitive category filter. Example: Admissions\nQuery search (optional): Substring search on subject/message/student name/email. Example: Postman.\n\nValidation: Admin-signature JWT with role admin or teacher; optional filters.\n\nExpected success HTTP 200; structure InquiryList:\n{\n  \"success\": true,\n  \"data\": \"Inquiry[]\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 401 missing/invalid/expired token; 403 wrong role; 500 for database/server/type/constraint errors.\n\nSide effects: SELECT only, following the inspected handler.\n\nNotes: Orders pending inquiries first, then replied, then others; newest first within these groups."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "  pm.expect(result.data).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "PUT /api/inquiries/:id/reply - Reply and notify the student",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/inquiries/{{inquiryId}}/reply",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "inquiries",
+                "{{inquiryId}}",
+                "reply"
+              ]
+            },
+            "description": "Reply and notify the student.\n\nSource: Backend/routes/inquiriesRoute.js:122.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json; Authorization: Bearer {{adminToken}}.\n\nAuthentication/roles: Admin-signature JWT; role admin or teacher.\n\nParameters: Path id: existing integer; Postman {{inquiryId}}.\n\nValidation: reply must be a nonempty string after trim. status defaults Replied; unlike the status route, reply does NOT enforce a status enum.\n\nExpected success HTTP 200; structure InquiryWrite:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"data\": \"Inquiry\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 for explicit required-field/enum validation, where implemented; 401 missing/invalid/expired token; 403 wrong role; 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Updates the inquiry and attempts to create a personal student notification. The notification helper catches its own errors, so reply can return 200 even if notification insertion fails.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reply\": \"Please prepare your A/L results and identification.\",\n  \"status\": \"Replied\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "PUT /api/inquiries/:id/status - Change an inquiry status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/inquiries/{{inquiryId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "inquiries",
+                "{{inquiryId}}",
+                "status"
+              ]
+            },
+            "description": "Change an inquiry status.\n\nSource: Backend/routes/inquiriesRoute.js:168.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json; Authorization: Bearer {{adminToken}}.\n\nAuthentication/roles: Admin-signature JWT; role admin or teacher.\n\nParameters: Path id: existing integer; Postman {{inquiryId}}.\n\nValidation: status must be exactly Pending, Replied or Closed.\n\nExpected success HTTP 200; structure InquiryWrite:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"data\": \"Inquiry\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 for explicit required-field/enum validation, where implemented; 401 missing/invalid/expired token; 403 wrong role; 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Closed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "DELETE /api/inquiries/:id - Delete an inquiry",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/inquiries/{{inquiryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "inquiries",
+                "{{inquiryId}}"
+              ]
+            },
+            "description": "Delete an inquiry.\n\nSource: Backend/routes/inquiriesRoute.js:195.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Path id: existing integer; Postman {{inquiryId}}.\n\nValidation: Existing integer inquiry id, parsed with parseInt.\n\nExpected success HTTP 200; structure Message:\n{\n  \"success\": true,\n  \"message\": \"string\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nNotes: No auth middleware is attached. Does not explicitly remove its personal notification."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10 Announcements",
+      "item": [
+        {
+          "name": "GET /api/notifications - List announcements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "stream",
+                  "value": "Physical Science",
+                  "description": "Exact target_stream filter including global announcements; omitted or lowercase all disables filter.",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List announcements.\n\nSource: Backend/routes/notificationsRoute.js:23.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Query stream (optional): Exact target_stream filter including global announcements; omitted or lowercase all disables filter. Example: Physical Science.\n\nValidation: Optional stream filter.\n\nExpected success HTTP 200; structure NotificationList:\n{\n  \"success\": true,\n  \"count\": \"integer\",\n  \"data\": \"Notification[]\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 500 for database/server/type/constraint errors.\n\nSide effects: Calls CREATE TABLE IF NOT EXISTS before reading; therefore not guaranteed to be database read-only.\n\nNotes: Ordered by is_pinned descending then created_at descending."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"count\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "  pm.expect(result.data).to.be.an(\"array\");",
+                  "  pm.expect(result.count).to.be.a(\"number\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /api/notifications/unread-count - Count all announcements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/unread-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "unread-count"
+              ]
+            },
+            "description": "Count all announcements.\n\nSource: Backend/routes/notificationsRoute.js:48.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: No parameters; stream is not read.\n\nExpected success HTTP 200; structure Count:\n{\n  \"success\": true,\n  \"count\": \"integer\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 500 for database/server/type/constraint errors.\n\nSide effects: Calls CREATE TABLE IF NOT EXISTS.\n\nNotes: Despite the name, counts ALL announcements; no per-user read tracking."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"count\");",
+                  "  pm.expect(result.count).to.be.a(\"number\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /api/notifications - Create an announcement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notifications"
+              ]
+            },
+            "description": "Create an announcement.\n\nSource: Backend/routes/notificationsRoute.js:61.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: none.\n\nValidation: Truthy title and message required; no trim/length validation. type defaults info; accepted types info, warning, success, deadline, scholarship; other values silently become info. targetStream defaults null; isPinned defaults false; use a boolean.\n\nExpected success HTTP 201; structure NotificationDetail:\n{\n  \"success\": true,\n  \"data\": \"Notification\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 for explicit required-field/enum validation, where implemented; 500 for database/server/type/constraint errors.\n\nSide effects: Creates table if absent, then inserts announcement.\n\nNotes: Comments say admin only, but no authentication middleware is attached.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman test announcement\",\n  \"message\": \"This is a synthetic announcement.\",\n  \"type\": \"info\",\n  \"targetStream\": \"Physical Science\",\n  \"isPinned\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 201 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});",
+                  "if (pm.response.code === 201 && result && result.success === true && result.data && result.data.id !== undefined) {",
+                  "  pm.environment.set(\"notificationId\", String(result.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "PUT /api/notifications/:id - Partially update an announcement",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/{{notificationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "{{notificationId}}"
+              ]
+            },
+            "description": "Partially update an announcement.\n\nSource: Backend/routes/notificationsRoute.js:93.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: Content-Type: application/json.\n\nAuthentication/roles: None enforced.\n\nParameters: Path id: existing integer; Postman {{notificationId}}.\n\nValidation: No required body fields. Omitted/falsy title/message/type preserve existing values; type is NOT enum-validated on update. Omitted targetStream preserves value; null/empty clears it. Omitted/null isPinned preserves it; false updates it.\n\nExpected success HTTP 200; structure NotificationDetail:\n{\n  \"success\": true,\n  \"data\": \"Notification\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nNotes: No authentication middleware. Does not call ensureTable; table must already exist.\n\nBody values are synthetic templates. Set empty credential/ID environment variables before sending. OTP/resource examples require real test prerequisites.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman test announcement\",\n  \"message\": \"This is a synthetic announcement.\",\n  \"type\": \"info\",\n  \"targetStream\": \"Physical Science\",\n  \"isPinned\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "DELETE /api/notifications/:id - Delete an announcement",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/{{notificationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "{{notificationId}}"
+              ]
+            },
+            "description": "Delete an announcement.\n\nSource: Backend/routes/notificationsRoute.js:120.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Path id: existing integer; Postman {{notificationId}}.\n\nValidation: Existing integer announcement id required.\n\nExpected success HTTP 200; structure NotificationDelete:\n{\n  \"success\": true,\n  \"message\": \"string\",\n  \"id\": \"integer\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 404 if the resource is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nNotes: No authentication middleware. Does not call ensureTable; table must already exist."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "  pm.expect(result).to.have.property(\"id\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "11 Personal notifications",
+      "item": [
+        {
+          "name": "GET /api/student-notifications - List a student's personal inbox",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/student-notifications?email={{studentEmail}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student-notifications"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "{{studentEmail}}",
+                  "description": "Required student email.",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "List a student's personal inbox.\n\nSource: Backend/routes/studentNotificationsRoute.js:23.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Query email (required): Required student email. Example: {{studentEmail}}.\n\nValidation: Required nonempty email query, compared case-insensitively after trim.\n\nExpected success HTTP 200; structure StudentNotificationList:\n{\n  \"success\": true,\n  \"count\": \"integer\",\n  \"data\": \"StudentNotification[]\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 if the required email query is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Calls CREATE TABLE IF NOT EXISTS before validating the email.\n\nNotes: Returns newest 50 notifications; no ownership check or token requirement."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"count\");",
+                  "  pm.expect(result).to.have.property(\"data\");",
+                  "  pm.expect(result.data).to.be.an(\"array\");",
+                  "  pm.expect(result.count).to.be.a(\"number\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /api/student-notifications/unread-count - Count unread personal notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/student-notifications/unread-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student-notifications",
+                "unread-count"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "{{studentEmail}}",
+                  "description": "Email used to count is_read=false notifications; absent returns 0.",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Count unread personal notifications.\n\nSource: Backend/routes/studentNotificationsRoute.js:44.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Query email (optional): Email used to count is_read=false notifications; absent returns 0. Example: {{studentEmail}}.\n\nValidation: Optional email query; without it returns count 0.\n\nExpected success HTTP 200; structure Count:\n{\n  \"success\": true,\n  \"count\": \"integer\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 500 for database/server/type/constraint errors.\n\nSide effects: Calls CREATE TABLE IF NOT EXISTS even when no email is supplied."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"count\");",
+                  "  pm.expect(result.count).to.be.a(\"number\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "PUT /api/student-notifications/mark-all-read - Mark a student's inbox as read",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/student-notifications/mark-all-read?email={{studentEmail}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student-notifications",
+                "mark-all-read"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "{{studentEmail}}",
+                  "description": "Required email whose notifications are marked read.",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Mark a student's inbox as read.\n\nSource: Backend/routes/studentNotificationsRoute.js:61.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Query email (required): Required email whose notifications are marked read. Example: {{studentEmail}}.\n\nValidation: Required nonempty email query.\n\nExpected success HTTP 200; structure Message:\n{\n  \"success\": true,\n  \"message\": \"string\"\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 400 if the required email query is absent; 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nNotes: No JSON body, auth or ownership check. Does not ensure table exists."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "  pm.expect(result).to.have.property(\"message\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "PUT /api/student-notifications/:id/read - Mark one personal notification as read",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/student-notifications/{{studentNotificationId}}/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student-notifications",
+                "{{studentNotificationId}}",
+                "read"
+              ]
+            },
+            "description": "Mark one personal notification as read.\n\nSource: Backend/routes/studentNotificationsRoute.js:77.\n\nRuntime: Not executed. Found and documented from source only.\n\nHeaders: none required; Accept: application/json is optional.\n\nAuthentication/roles: None enforced.\n\nParameters: Path id: existing integer; Postman {{studentNotificationId}}.\n\nValidation: Integer personal-notification id required.\n\nExpected success HTTP 200; structure Success:\n{\n  \"success\": true\n}\n\nModel fields are defined in API_TESTING.md. These are expected shapes, not captured responses.\n\nPossible failures: 500 for database/server/type/constraint errors.\n\nSide effects: Writes database records.\n\nNotes: No JSON body, auth or ownership check; returns 200 even when no row matches. Does not ensure table exists."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected success status: 200 (source-derived)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let result;",
+                  "try { result = pm.response.json(); } catch (error) { result = null; }",
+                  "pm.test(\"Expected JSON success envelope (source-derived)\", function () {",
+                  "  pm.expect(result).to.be.an(\"object\");",
+                  "  pm.expect(result.success).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    }
+  ]
+}
+

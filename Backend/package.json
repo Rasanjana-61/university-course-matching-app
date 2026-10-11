@@ -6,6 +6,7 @@
     "dev": "nodemon index.js",
     "start": "node index.js",
     "check-db": "node check-db.js",
+    "verify-api": "node scripts/verify-api.js",
     "update-university-banners": "node scripts/update-university-banners.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
